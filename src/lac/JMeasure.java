@@ -73,13 +73,13 @@ public class JMeasure {
                 // the following format: "LOG: TIMESTAMP POWERVALUE"
                 // or: "TAG1" 
                 
-                if (values.length != 3) {
+                //if (values.length != 3) {
                     // found tag 1, which enables the measurement
                     if (log.contains("START")) {
                         System.out.println("-> Measurement started, " + 
                                 " writing to output file.");
                         initiated = true;
-                        continue;
+                  //      continue;
                     }
                     // found tag 2, which disables the measurement
                     if (log.contains("FINISH")) {
@@ -88,12 +88,14 @@ public class JMeasure {
                         break;
                     }
                     
-                    System.out.println("Received unformmated input: " + log);
-                    continue;
-                }
+                 //   System.out.println("Received unformmated input: " + log);
+                 //   continue;
+                //}
                 
-                if (initiated && values[0].equals("LOG:"))
-                    bw.write(values[1] + values[2] + "\n");
+                if (initiated && values[0].equals("LOG:")) {
+                    System.out.println(values[1] + " " + values[2]);
+                    bw.write(values[1] + " " + values[2] + "\n");
+                }
             }
 
             bw.close();
