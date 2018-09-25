@@ -5,9 +5,9 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import lac.EnergyCalculator;
 
 /**
  * Connects to the SmartPower2 device through telnet and collects sample values.
@@ -18,37 +18,57 @@ public class JMeasure {
     private BufferedReader br;
     private BufferedWriter bw;
     private String outFile;
-    private boolean enabled = false;
+    
+    /**
+     * Wrapper over System.out.println(String)
+     * @param msg 
+     */
+    private static void show(String msg) {
+        System.out.println(msg);
+    }
     
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Syntax: java -cp . lac.jmeasure output_file server_ip_address");
+            System.out.println("Syntax: java -cp $CLASSPATH lac.jmeasure server_ip_address output_file");
             System.exit(1);
         }
         
-        String outFile = args[0];
-        String ip = args[1];
-        System.out.println("Initiating JMeasure\n\nOutput file: " + outFile);
+        String outFile = args[1];
+        String ip = args[0];        
         
-        JMeasure jm = new JMeasure();
+        show("Initiating JMeasure");
+        show("Outputs will be written to the file: " + outFile);
+        
+        JMeasure jm = new JMeasure();                
         jm.setOutput(outFile);
-        jm.connect(ip);
-        jm.collect();
         
+        if (!jm.connect(ip))
+            return;        
+        jm.collectSamples();
+        
+        EnergyCalculator ec = new EnergyCalculator();
+        double energy = ec.calc(outFile);
+        show("Total energy spent: " + energy);
     }
     
     /**
      * Connects to the telnet server.
      */
-    public void connect(String ip){
+    public boolean connect(String ip){
+        boolean success = true;
         try {
-            sock = new Socket(ip, 23);
+            sock = new Socket();
+            sock.connect(new InetSocketAddress(ip, 23), 1000);
         } catch (IOException ex) {
-            Logger.getLogger(JMeasure.class.getName()).log(Level.SEVERE, null, ex);
-        }
+            success = false;
+            show("\nProblem while connecting to SmartPower through telnet.");
+            show("Check if you are connected to the SmartPower WiFi network\n"
+                    + "  and if you can reach the IP address: " + ip);
+        }        
+        return success;
     }
     
     public void setOutput(String filename) {
@@ -58,7 +78,7 @@ public class JMeasure {
     /**
      * Collects and processes the outputs of the telnet connection (Smartpower2)   
      */
-    private void collect() {        
+    private void collectSamples() {        
         try {
             String log;
             boolean initiated = false;
@@ -76,31 +96,31 @@ public class JMeasure {
                 if (values.length != 3) {
                     // found tag 1, which enables the measurement
                     if (log.contains("START")) {
-                        System.out.println("-> Measurement started, " + 
-                                " writing to output file.");
+                        show("Measurement started, " + 
+                                " loggining data.");
                         initiated = true;
                         continue;
                     }
                     // found tag 2, which disables the measurement
                     if (log.contains("FINISH")) {
-                        System.out.println("-> Measurement stopped, " + 
+                        show("Measurement stopped, " + 
                                 " closing output file.");
                         break;
                     }
                     
-                    System.out.println("Received unformmated input: " + log);
+                    show("Received unformmated input: " + log);
                     continue;
                 }
                 
                 if (initiated && values[0].equals("LOG:")) {
-                    System.out.println(values[1] + " " + values[2]);
+                    show(values[1] + " " + values[2]);
                     bw.write(values[1] + " " + values[2] + "\n");
                 }
             }
 
             bw.close();
             br.close();
-            sock.close();
+            sock.close();                        
         }
         catch(IOException e) {
           e.printStackTrace();
