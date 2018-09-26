@@ -45,8 +45,9 @@ public class JMeasure {
         JMeasure jm = new JMeasure();                
         jm.setOutput(outFile);
         
-        if (!jm.connect(ip))
-            return;        
+        if (!jm.connect(ip)) 
+            return;     
+	show("Connected to SmartPower2 Device");
         jm.collectSamples();
         
         EnergyCalculator ec = new EnergyCalculator();
@@ -67,7 +68,7 @@ public class JMeasure {
             show("\nProblem while connecting to SmartPower through telnet.");
             show("Check if you are connected to the SmartPower WiFi network\n"
                     + "  and if you can reach the IP address: " + ip);
-        }        
+        }
         return success;
     }
     
