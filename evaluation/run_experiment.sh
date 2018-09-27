@@ -80,7 +80,7 @@ function serverside {
     for governor in ${governors[@]}; do
       cpufreq "$governor"
       for it in ${iterations[@]}; do
-        echo "java -cp release/JMeasure.jar lac.JMeasure 192.168.4.1 evaluation/measures/log-${config}-${governor}-${it}.txt"
+        echo "java -cp ../release/JMeasure.jar lac.JMeasure 192.168.4.1 evaluation/measures/log-${config}-${governor}-${it}.txt"
         java -cp release/JMeasure.jar lac.JMeasure 192.168.4.1 evaluation/measures/log-${config}-${governor}-${it}.txt
       done
     done
